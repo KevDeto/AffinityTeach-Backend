@@ -32,29 +32,3 @@ build/
 
 ### VS Code ###
 .vscode/
-
-### Credenciales y configuraciones sensibles ###
-# Archivos de Firebase
-src/main/resources/private-key-firestore.json
-src/main/resources/*.json
-src/main/resources/*.key
-src/main/resources/*.p12
-src/main/resources/*.pem
-
-# Variables de entorno
-.env
-.env.local
-.env.development
-.env.production
-
-# Configuraciones específicas
-config/
-credentials/
-keys/
-secrets/
-
-# Otros archivos sensibles
-*.properties
-application*.yml
-application*.yaml
-application*.properties
