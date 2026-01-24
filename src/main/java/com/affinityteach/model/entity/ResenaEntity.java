@@ -12,11 +12,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Entity
 public class ResenaEntity {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+	private String id;
 
 	private String estudiante;
 	private String comentario;
@@ -24,7 +21,7 @@ public class ResenaEntity {
 	private LocalDateTime fecha;
 	private Integer likes = 0;
 
-	public ResenaEntity(Long id, String estudiante, String comentario, Integer estrellas, LocalDateTime fecha,
+	public ResenaEntity(String id, String estudiante, String comentario, Integer estrellas, LocalDateTime fecha,
 			Integer likes) {
 		super();
 		this.id = id;
@@ -38,11 +35,11 @@ public class ResenaEntity {
 	public ResenaEntity() {
 	}
 
-	public Long getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 

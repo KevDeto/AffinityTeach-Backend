@@ -16,24 +16,18 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Entity
 public class DocenteEntity {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+	private String id;
 
 	private String nombre;
 	private Double puntaje = 0.0;
 	private Integer cantResenas = 0;
 
-	@ElementCollection
 	private List<String> materias = new ArrayList<>();
 
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-	@JoinColumn(name = "docente_id")
 	private List<ResenaEntity> resenas = new ArrayList<>();
 
-	public DocenteEntity(Long id, String nombre, Double puntaje, Integer cantResenas, List<String> materias,
+	public DocenteEntity(String id, String nombre, Double puntaje, Integer cantResenas, List<String> materias,
 			List<ResenaEntity> resenas) {
 		super();
 		this.id = id;
@@ -47,11 +41,11 @@ public class DocenteEntity {
 	public DocenteEntity() {
 	}
 
-	public Long getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 

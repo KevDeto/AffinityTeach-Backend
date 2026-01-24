@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +21,7 @@ public class DocenteController {
     private final DocenteService docenteService;
     
     public DocenteController(DocenteService docenteService) {
-    	this.docenteService = docenteService;
+        this.docenteService = docenteService;
     }
     
     // ============ CRUD BÁSICO ============
@@ -31,11 +32,11 @@ public class DocenteController {
         return ResponseEntity.ok(docenteService.getAllDocentes());
     }
     
-    // 2. Obtener docente por ID
+    // 2. Obtener docente por ID (cambiado a String)
     @GetMapping("/{id}")
-    public ResponseEntity<?> getDocenteById(@PathVariable Long id) {
+    public ResponseEntity<?> getDocenteById(@PathVariable String id) {
         return docenteService.getDocenteById(id)
-                .<ResponseEntity<?>>map(ResponseEntity::ok) // Cast explícito
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(crearErrorResponse("Docente no encontrado con ID: " + id)));
     }
@@ -49,13 +50,16 @@ public class DocenteController {
             return ResponseEntity.status(HttpStatus.CREATED).body(docenteCreado);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(crearErrorResponse(e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(crearErrorResponse("Error al crear docente: " + e.getMessage()));
         }
     }
     
-    // 4. Actualizar docente
+    // 4. Actualizar docente (cambiado a String)
     @PutMapping("/{id}")
     public ResponseEntity<?> actualizarDocente(
-            @PathVariable Long id,
+            @PathVariable String id,
             @RequestBody DocenteRequestDTO docenteRequest) {
         
         try {
@@ -66,25 +70,33 @@ public class DocenteController {
                             .body(crearErrorResponse("Docente no encontrado con ID: " + id)));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(crearErrorResponse(e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(crearErrorResponse("Error al actualizar docente: " + e.getMessage()));
         }
     }
     
-    // 5. Eliminar docente
+    // 5. Eliminar docente (cambiado a String)
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> eliminarDocente(@PathVariable Long id) {
-        if (docenteService.eliminarDocente(id)) {
-            return ResponseEntity.ok(crearMensajeResponse("Docente eliminado correctamente"));
+    public ResponseEntity<?> eliminarDocente(@PathVariable String id) {
+        try {
+            if (docenteService.eliminarDocente(id)) {
+                return ResponseEntity.ok(crearMensajeResponse("Docente eliminado correctamente"));
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(crearErrorResponse("Docente no encontrado con ID: " + id));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(crearErrorResponse("Error al eliminar docente: " + e.getMessage()));
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(crearErrorResponse("Docente no encontrado con ID: " + id));
     }
     
     // ============ OPERACIONES CON RESEÑAS ============
     
-    // 6. Agregar reseña a un docente
+    // 6. Agregar reseña a un docente (cambiado a String)
     @PostMapping("/{id}/resenas")
     public ResponseEntity<?> agregarResena(
-            @PathVariable Long id,
+            @PathVariable String id,
             @RequestBody ResenaRequestDTO resenaRequest) {
         
         try {
@@ -95,19 +107,27 @@ public class DocenteController {
                             .body(crearErrorResponse("Docente no encontrado con ID: " + id)));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(crearErrorResponse(e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(crearErrorResponse("Error al agregar reseña: " + e.getMessage()));
         }
     }
     
-    // 7. Dar like a una reseña
+    // 7. Dar like a una reseña (cambiado a String)
     @PostMapping("/{docenteId}/resenas/{resenaId}/like")
     public ResponseEntity<?> darLike(
-            @PathVariable Long docenteId,
-            @PathVariable Long resenaId) {
+            @PathVariable String docenteId,
+            @PathVariable String resenaId) {
         
-        return docenteService.darLike(docenteId, resenaId)
-                .<ResponseEntity<?>>map(ResponseEntity::ok)
-                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(crearErrorResponse("Docente o reseña no encontrados")));
+        try {
+            return docenteService.darLike(docenteId, resenaId)
+                    .<ResponseEntity<?>>map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .body(crearErrorResponse("Docente o reseña no encontrados")));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(crearErrorResponse("Error al dar like: " + e.getMessage()));
+        }
     }
     
     // ============ BÚSQUEDA Y OTROS ============
@@ -115,7 +135,12 @@ public class DocenteController {
     // 8. Buscar docentes por nombre
     @GetMapping("/buscar")
     public ResponseEntity<List<DocenteEntity>> buscarPorNombre(@RequestParam String nombre) {
-        return ResponseEntity.ok(docenteService.buscarPorNombre(nombre));
+        try {
+            return ResponseEntity.ok(docenteService.buscarPorNombre(nombre));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.emptyList());
+        }
     }
     
     // 9. Cargar datos iniciales (desde array de DTOs)
@@ -129,6 +154,9 @@ public class DocenteController {
             return ResponseEntity.status(HttpStatus.CREATED).body(docentesCreados);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(crearErrorResponse(e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(crearErrorResponse("Error al cargar docentes iniciales: " + e.getMessage()));
         }
     }
     
