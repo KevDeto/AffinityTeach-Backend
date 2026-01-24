@@ -1,12 +1,5 @@
 package com.affinityteach.model.dto;
 
-//import jakarta.validation.constraints.Max;
-//import jakarta.validation.constraints.Min;
-//import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-
 public class ResenaRequestDTO {
 //    @NotBlank(message = "El nombre del estudiante es requerido")
 	private String estudiante;

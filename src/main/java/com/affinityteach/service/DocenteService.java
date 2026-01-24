@@ -15,7 +15,6 @@ import com.google.cloud.firestore.QuerySnapshot;
 import com.google.cloud.firestore.WriteResult;
 
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -30,7 +29,6 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 @Service
-@RequiredArgsConstructor
 public class DocenteService {
     
     private final FirebaseInitializer firebaseInitializer;

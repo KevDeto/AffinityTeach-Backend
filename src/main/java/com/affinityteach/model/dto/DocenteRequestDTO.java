@@ -2,10 +2,6 @@ package com.affinityteach.model.dto;
 
 import java.util.List;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-
 public class DocenteRequestDTO {
 //    @NotBlank(message = "El nombre del docente es requerido")
 	private String nombre;

@@ -4,7 +4,6 @@ import com.affinityteach.model.dto.DocenteRequestDTO;
 import com.affinityteach.model.dto.ResenaRequestDTO;
 import com.affinityteach.model.entity.DocenteEntity;
 import com.affinityteach.service.DocenteService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
