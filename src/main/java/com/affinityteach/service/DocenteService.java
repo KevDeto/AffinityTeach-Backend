@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 @Service
@@ -73,21 +74,22 @@ public class DocenteService {
     }
     
     // 2. Obtener docente por ID
+ // En getDocenteById:
     public Optional<DocenteEntity> getDocenteById(String id) {
         try {
             DocumentSnapshot doc = docentesCollection.document(String.valueOf(id)).get().get();
             if (doc.exists()) {
-                DocenteEntity docente = doc.toObject(DocenteEntity.class);
-                if (docente != null) {
-                    docente.setId(doc.getId());
-                }
-                return Optional.ofNullable(docente);
+                // Usar deserialización manual
+                DocenteEntity docente = deserializarDocente(doc);
+                return Optional.of(docente);
             }
             return Optional.empty();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException("Error obteniendo docente de Firebase", e);
         }
     }
+
+    // En darLike y otros métodos que obtienen docentes, reemplaza toObject() con deserializarDocente()
     
     // 3. Agregar reseña a un docente usando DTO
     public Optional<DocenteEntity> agregarResena(String docenteId, ResenaRequestDTO resenaRequest) {
@@ -103,8 +105,8 @@ public class DocenteService {
             }
             docente.setId(doc.getId());
             
-            // Convertir DTO a Entity
-            ResenaEntity resena = new ResenaEntity();
+            // Convertir DTO a Entity CON ID
+            ResenaEntity resena = new ResenaEntity(); // El constructor ya genera ID automático
             resena.setEstudiante(resenaRequest.getEstudiante());
             resena.setComentario(resenaRequest.getComentario());
             resena.setEstrellas(resenaRequest.getEstrellas());
@@ -324,6 +326,7 @@ public class DocenteService {
     }
     
  // 11. Obtener todas las reseñas de un docente por ID
+ // 11. Obtener todas las reseñas de un docente por ID
     public Optional<List<ResenaEntity>> getResenasByDocenteId(String id) {
         try {
             DocumentSnapshot doc = docentesCollection.document(String.valueOf(id)).get().get();
@@ -331,10 +334,8 @@ public class DocenteService {
                 return Optional.empty();
             }
             
-            DocenteEntity docente = doc.toObject(DocenteEntity.class);
-            if (docente == null) {
-                return Optional.empty();
-            }
+            // Usar deserialización manual en lugar de toObject()
+            DocenteEntity docente = deserializarDocente(doc);
             
             // Retornar la lista de reseñas (puede estar vacía)
             List<ResenaEntity> resenas = docente.getResenas() != null ? 
@@ -373,18 +374,24 @@ public class DocenteService {
         docenteMap.put("cantResenas", docente.getCantResenas());
         docenteMap.put("materias", docente.getMaterias() != null ? docente.getMaterias() : new ArrayList<>());
         
-        // Convertir reseñas
+        // Convertir reseñas asegurando que tengan ID
         List<Map<String, Object>> resenasList = new ArrayList<>();
         if (docente.getResenas() != null && !docente.getResenas().isEmpty()) {
             for (ResenaEntity resena : docente.getResenas()) {
                 Map<String, Object> resenaMap = new HashMap<>();
+                // Generar ID si no existe
+                if (resena.getId() == null || resena.getId().isEmpty()) {
+                    resena.setId(UUID.randomUUID().toString());
+                }
+                
                 resenaMap.put("id", resena.getId());
                 resenaMap.put("estudiante", resena.getEstudiante());
                 resenaMap.put("comentario", resena.getComentario());
                 resenaMap.put("estrellas", resena.getEstrellas());
                 resenaMap.put("fecha", resena.getFecha() != null ? 
-                        resena.getFecha().format(DATE_FORMATTER) : null);
-                resenaMap.put("likes", resena.getLikes());
+                        resena.getFecha().format(DATE_FORMATTER) : 
+                        LocalDateTime.now().format(DATE_FORMATTER));
+                resenaMap.put("likes", resena.getLikes() != null ? resena.getLikes() : 0);
                 resenasList.add(resenaMap);
             }
         }
@@ -394,5 +401,36 @@ public class DocenteService {
         docenteMap.put("ultimaActualizacion", new Date());
         
         return docenteMap;
+    }
+    
+ // Método auxiliar para deserializar DocenteEntity correctamente
+    private DocenteEntity deserializarDocente(DocumentSnapshot doc) {
+        DocenteEntity docente = new DocenteEntity();
+        docente.setId(doc.getId());
+        docente.setNombre(doc.getString("nombre"));
+        docente.setPuntaje(doc.getDouble("puntaje"));
+        docente.setCantResenas(doc.get("cantResenas", Integer.class));
+        docente.setMaterias(doc.get("materias", List.class));
+        
+        // Deserializar reseñas manualmente
+        List<Map<String, Object>> resenasData = doc.get("resenas", List.class);
+        List<ResenaEntity> resenas = new ArrayList<>();
+        
+        if (resenasData != null) {
+            for (Map<String, Object> resenaData : resenasData) {
+                ResenaEntity resena = new ResenaEntity(
+                    (String) resenaData.get("id"),
+                    (String) resenaData.get("estudiante"),
+                    (String) resenaData.get("comentario"),
+                    (Integer) resenaData.get("estrellas"),
+                    resenaData.get("fecha"),
+                    (Integer) resenaData.get("likes")
+                );
+                resenas.add(resena);
+            }
+        }
+        docente.setResenas(resenas);
+        
+        return docente;
     }
 }
