@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: affinityteach-backend
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /actuator/health
+    autoDeploy: true
