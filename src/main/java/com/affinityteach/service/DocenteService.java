@@ -6,27 +6,11 @@ import com.affinityteach.model.dto.ResenaRequestDTO;
 import com.affinityteach.model.entity.DocenteEntity;
 import com.affinityteach.model.entity.ResenaEntity;
 import com.google.api.core.ApiFuture;
-import com.google.cloud.firestore.CollectionReference;
-import com.google.cloud.firestore.DocumentReference;
-import com.google.cloud.firestore.DocumentSnapshot;
-import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.Query;
-import com.google.cloud.firestore.QuerySnapshot;
-import com.google.cloud.firestore.WriteResult;
-
-import jakarta.annotation.PostConstruct;
+import com.google.cloud.firestore.*;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import jakarta.annotation.PostConstruct;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 @Service
@@ -35,117 +19,134 @@ public class DocenteService {
     private final FirebaseInitializer firebaseInitializer;
     private Firestore firestore;
     private CollectionReference docentesCollection;
-
+    
     private static final String COLECCION_DOCENTES = "docentes";
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
     
     public DocenteService(FirebaseInitializer firebaseInitializer) {
-		this.firebaseInitializer = firebaseInitializer;
-	}
-
-	@PostConstruct
+        this.firebaseInitializer = firebaseInitializer;
+    }
+    
+    @PostConstruct
     private void init() {
         this.firestore = firebaseInitializer.getFirestore();
         this.docentesCollection = firestore.collection(COLECCION_DOCENTES);
     }
     
-    // 1. Obtener todos los docentes (ordenados por nombre)
-    public List<DocenteEntity> getAllDocentes() {
-        try {
-            ApiFuture<QuerySnapshot> future = docentesCollection.get();
-            QuerySnapshot snapshot = future.get();
-            
-            List<DocenteEntity> docentes = new ArrayList<>();
-            for (DocumentSnapshot doc : snapshot.getDocuments()) {
-                DocenteEntity docente = doc.toObject(DocenteEntity.class);
-                if (docente != null) {
-                    docente.setId(doc.getId());
-                    docentes.add(docente);
-                }
-            }
-            
-            // Ordenar por nombre
-            docentes.sort(Comparator.comparing(DocenteEntity::getNombre));
-            return docentes;
-            
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Error obteniendo docentes de Firebase", e);
-        }
-    }
+    // ============ MÉTODOS PRINCIPALES ============
     
-    // 2. Obtener docente por ID
- // En getDocenteById:
-    public Optional<DocenteEntity> getDocenteById(String id) {
+    // 1. Obtener todas las reseñas de un docente por ID
+    public Optional<List<ResenaEntity>> getResenasByDocenteId(String id) {
         try {
-            DocumentSnapshot doc = docentesCollection.document(String.valueOf(id)).get().get();
-            if (doc.exists()) {
-                // Usar deserialización manual
-                DocenteEntity docente = deserializarDocente(doc);
-                return Optional.of(docente);
-            }
-            return Optional.empty();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Error obteniendo docente de Firebase", e);
-        }
-    }
-
-    // En darLike y otros métodos que obtienen docentes, reemplaza toObject() con deserializarDocente()
-    
-    // 3. Agregar reseña a un docente usando DTO
-    public Optional<DocenteEntity> agregarResena(String docenteId, ResenaRequestDTO resenaRequest) {
-        try {
-            DocumentSnapshot doc = docentesCollection.document(String.valueOf(docenteId)).get().get();
+            DocumentReference docenteRef = docentesCollection.document(id);
+            DocumentSnapshot doc = docenteRef.get().get();
+            
             if (!doc.exists()) {
                 return Optional.empty();
             }
             
+            // ¡POJO MAGIC! Firestore deserializa automáticamente
+            DocenteEntity docente = doc.toObject(DocenteEntity.class);
+            if (docente == null) {
+                return Optional.empty();
+            }
+            
+            docente.setId(doc.getId()); // Asignar ID desde documento
+            
+            // Asegurar que las reseñas no sean null
+            List<ResenaEntity> resenas = docente.getResenas() != null ? 
+                    docente.getResenas() : new ArrayList<>();
+            
+            return Optional.of(resenas);
+            
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Error obteniendo reseñas de docente desde Firestore", e);
+        }
+    }
+    
+    // 2. Obtener docente por ID
+    public Optional<DocenteEntity> getDocenteById(String id) {
+        try {
+            DocumentReference docenteRef = docentesCollection.document(id);
+            DocumentSnapshot doc = docenteRef.get().get();
+            
+            if (!doc.exists()) {
+                return Optional.empty();
+            }
+            
+            // Deserialización automática
+            DocenteEntity docente = doc.toObject(DocenteEntity.class);
+            if (docente != null) {
+                docente.setId(doc.getId());
+            }
+            return Optional.ofNullable(docente);
+            
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Error obteniendo docente de Firestore", e);
+        }
+    }
+    
+    // 3. Agregar reseña a un docente
+    public Optional<DocenteEntity> agregarResena(String docenteId, ResenaRequestDTO resenaRequest) {
+        try {
+            DocumentReference docenteRef = docentesCollection.document(docenteId);
+            DocumentSnapshot doc = docenteRef.get().get();
+            
+            if (!doc.exists()) {
+                return Optional.empty();
+            }
+            
+            // Obtener docente actual
             DocenteEntity docente = doc.toObject(DocenteEntity.class);
             if (docente == null) {
                 return Optional.empty();
             }
             docente.setId(doc.getId());
             
-            // Convertir DTO a Entity CON ID
-            ResenaEntity resena = new ResenaEntity(); // El constructor ya genera ID automático
-            resena.setEstudiante(resenaRequest.getEstudiante());
-            resena.setComentario(resenaRequest.getComentario());
-            resena.setEstrellas(resenaRequest.getEstrellas());
-            resena.setFecha(LocalDateTime.now());
-            resena.setLikes(0);
-            
             // Validar estrellas
-            if (resena.getEstrellas() == null || resena.getEstrellas() < 1 || resena.getEstrellas() > 5) {
+            if (resenaRequest.getEstrellas() == null || 
+                resenaRequest.getEstrellas() < 1 || 
+                resenaRequest.getEstrellas() > 5) {
                 throw new IllegalArgumentException("Las estrellas deben estar entre 1 y 5");
             }
             
-            // Agregar reseña
-            if (docente.getResenas() == null) {
-                docente.setResenas(new ArrayList<>());
-            }
-            docente.getResenas().add(resena);
+            // Crear nueva reseña
+            ResenaEntity nuevaResena = new ResenaEntity(
+                resenaRequest.getEstudiante(),
+                resenaRequest.getComentario(),
+                resenaRequest.getEstrellas()
+            );
+            
+            // Agregar a la lista
+            docente.getResenas().add(nuevaResena);
             docente.setCantResenas(docente.getResenas().size());
             
-            // Calcular nuevo promedio de puntaje
+            // Calcular nuevo promedio
             calcularPuntajePromedio(docente);
             
-            // Guardar en Firebase
-            Map<String, Object> docenteMap = convertirDocenteAMap(docente);
-            ApiFuture<WriteResult> future = docentesCollection
-                    .document(String.valueOf(docenteId))
-                    .set(docenteMap);
-            future.get();
+            // Guardar en Firestore (update solo los campos necesarios)
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("resenas", docente.getResenas());
+            updates.put("cantResenas", docente.getCantResenas());
+            updates.put("puntaje", docente.getPuntaje());
+            
+            docenteRef.update(updates).get();
             
             return Optional.of(docente);
             
         } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Error agregando reseña en Firebase", e);
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Error agregando reseña en Firestore", e);
         }
     }
     
     // 4. Dar like a una reseña
     public Optional<DocenteEntity> darLike(String docenteId, String resenaId) {
         try {
-            DocumentSnapshot doc = docentesCollection.document(String.valueOf(docenteId)).get().get();
+            DocumentReference docenteRef = docentesCollection.document(docenteId);
+            DocumentSnapshot doc = docenteRef.get().get();
+            
             if (!doc.exists()) {
                 return Optional.empty();
             }
@@ -170,63 +171,88 @@ public class DocenteService {
                 return Optional.empty();
             }
             
-            // Guardar en Firebase
-            Map<String, Object> docenteMap = convertirDocenteAMap(docente);
-            ApiFuture<WriteResult> future = docentesCollection
-                    .document(String.valueOf(docenteId))
-                    .set(docenteMap);
-            future.get();
+            // Actualizar solo las reseñas
+            docenteRef.update("resenas", docente.getResenas()).get();
             
             return Optional.of(docente);
             
         } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Error dando like en Firebase", e);
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Error dando like en Firestore", e);
         }
     }
     
-    // 5. Crear nuevo docente usando DTO
+    // 5. Obtener todos los docentes
+    public List<DocenteEntity> getAllDocentes() {
+        try {
+            ApiFuture<QuerySnapshot> future = docentesCollection.get();
+            QuerySnapshot snapshot = future.get();
+            
+            List<DocenteEntity> docentes = new ArrayList<>();
+            for (DocumentSnapshot doc : snapshot.getDocuments()) {
+                DocenteEntity docente = doc.toObject(DocenteEntity.class);
+                if (docente != null) {
+                    docente.setId(doc.getId());
+                    docentes.add(docente);
+                }
+            }
+            
+            // Ordenar por nombre
+            docentes.sort(Comparator.comparing(DocenteEntity::getNombre));
+            return docentes;
+            
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Error obteniendo docentes de Firestore", e);
+        }
+    }
+    
+    // 6. Crear nuevo docente
     public DocenteEntity crearDocente(DocenteRequestDTO docenteRequest) {
         try {
-            // Generar nuevo ID
-        	DocumentReference nuevoDoc = docentesCollection.document();
-        	String nuevoId = nuevoDoc.getId(); // ID temporal simple
+            // Generar nuevo documento
+            DocumentReference nuevoDoc = docentesCollection.document();
+            String nuevoId = nuevoDoc.getId();
             
+            // Crear entidad
             DocenteEntity docente = new DocenteEntity();
             docente.setId(nuevoId);
             docente.setNombre(docenteRequest.getNombre());
-            docente.setMaterias(docenteRequest.getMaterias() != null ? docenteRequest.getMaterias() : List.of());
+            docente.setMaterias(docenteRequest.getMaterias() != null ? 
+                docenteRequest.getMaterias() : new ArrayList<>());
             docente.setPuntaje(0.0);
             docente.setCantResenas(0);
             docente.setResenas(new ArrayList<>());
             
-            // Guardar en Firebase
-            Map<String, Object> docenteMap = convertirDocenteAMap(docente);
-            ApiFuture<WriteResult> future = docentesCollection
-                    .document(String.valueOf(nuevoId))
-                    .set(docenteMap);
-            future.get();
+            // Guardar en Firestore
+            nuevoDoc.set(docente).get();
             
             return docente;
             
         } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Error creando docente en Firebase", e);
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Error creando docente en Firestore", e);
         }
     }
     
-    // 6. Actualizar docente
+    // 7. Actualizar docente
     public Optional<DocenteEntity> actualizarDocente(String id, DocenteRequestDTO docenteRequest) {
         try {
-            DocumentSnapshot doc = docentesCollection.document(String.valueOf(id)).get().get();
+            DocumentReference docenteRef = docentesCollection.document(id);
+            DocumentSnapshot doc = docenteRef.get().get();
+            
             if (!doc.exists()) {
                 return Optional.empty();
             }
             
+            // Obtener docente actual
             DocenteEntity docente = doc.toObject(DocenteEntity.class);
             if (docente == null) {
                 return Optional.empty();
             }
             docente.setId(doc.getId());
             
+            // Actualizar campos
             if (docenteRequest.getNombre() != null) {
                 docente.setNombre(docenteRequest.getNombre());
             }
@@ -234,75 +260,46 @@ public class DocenteService {
                 docente.setMaterias(docenteRequest.getMaterias());
             }
             
-            // Guardar en Firebase
-            Map<String, Object> docenteMap = convertirDocenteAMap(docente);
-            ApiFuture<WriteResult> future = docentesCollection
-                    .document(String.valueOf(id))
-                    .set(docenteMap);
-            future.get();
+            // Guardar cambios
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("nombre", docente.getNombre());
+            updates.put("materias", docente.getMaterias());
+            
+            docenteRef.update(updates).get();
             
             return Optional.of(docente);
             
         } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Error actualizando docente en Firebase", e);
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Error actualizando docente en Firestore", e);
         }
     }
     
-    // 7. Eliminar docente
+    // 8. Eliminar docente
     public boolean eliminarDocente(String id) {
         try {
-            DocumentSnapshot doc = docentesCollection.document(String.valueOf(id)).get().get();
+            DocumentReference docenteRef = docentesCollection.document(id);
+            DocumentSnapshot doc = docenteRef.get().get();
+            
             if (!doc.exists()) {
                 return false;
             }
             
-            ApiFuture<WriteResult> future = docentesCollection.document(String.valueOf(id)).delete();
-            future.get();
+            docenteRef.delete().get();
             return true;
             
         } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Error eliminando docente en Firebase", e);
-        }
-    }
-    
-    // 8. Cargar lista de docentes iniciales desde DTOs
-    public List<DocenteEntity> cargarDocentesIniciales(List<DocenteRequestDTO> docentesRequest) {
-        List<DocenteEntity> docentesCreados = new ArrayList<>();
-        
-        try {
-            for (DocenteRequestDTO dto : docentesRequest) {
-                DocumentReference nuevoDoc = docentesCollection.document();
-                String nuevoId = nuevoDoc.getId();
-                
-                DocenteEntity docente = new DocenteEntity();
-                docente.setId(nuevoId);
-                docente.setNombre(dto.getNombre());
-                docente.setMaterias(dto.getMaterias() != null ? dto.getMaterias() : List.of());
-                docente.setPuntaje(0.0);
-                docente.setCantResenas(0);
-                docente.setResenas(new ArrayList<>());
-                
-                // Guardar en Firebase
-                Map<String, Object> docenteMap = convertirDocenteAMap(docente);
-                ApiFuture<WriteResult> future = docentesCollection
-                        .document(String.valueOf(nuevoId))
-                        .set(docenteMap);
-                future.get();
-                
-                docentesCreados.add(docente);
-            }
-            return docentesCreados;
-            
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Error cargando docentes iniciales en Firebase", e);
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Error eliminando docente en Firestore", e);
         }
     }
     
     // 9. Buscar docentes por nombre
     public List<DocenteEntity> buscarPorNombre(String nombre) {
         try {
-            Query query = docentesCollection.whereGreaterThanOrEqualTo("nombre", nombre)
-                                          .whereLessThanOrEqualTo("nombre", nombre + "\uf8ff");
+            Query query = docentesCollection
+                .whereGreaterThanOrEqualTo("nombre", nombre)
+                .whereLessThanOrEqualTo("nombre", nombre + "\uf8ff");
             
             ApiFuture<QuerySnapshot> future = query.get();
             QuerySnapshot snapshot = future.get();
@@ -321,116 +318,57 @@ public class DocenteService {
             return docentes;
             
         } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Error buscando docentes por nombre en Firebase", e);
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Error buscando docentes por nombre en Firestore", e);
         }
     }
     
- // 11. Obtener todas las reseñas de un docente por ID
- // 11. Obtener todas las reseñas de un docente por ID
-    public Optional<List<ResenaEntity>> getResenasByDocenteId(String id) {
+    // 10. Cargar docentes iniciales
+    public List<DocenteEntity> cargarDocentesIniciales(List<DocenteRequestDTO> docentesRequest) {
+        List<DocenteEntity> docentesCreados = new ArrayList<>();
+        
         try {
-            DocumentSnapshot doc = docentesCollection.document(String.valueOf(id)).get().get();
-            if (!doc.exists()) {
-                return Optional.empty();
+            for (DocenteRequestDTO dto : docentesRequest) {
+                DocumentReference nuevoDoc = docentesCollection.document();
+                String nuevoId = nuevoDoc.getId();
+                
+                DocenteEntity docente = new DocenteEntity();
+                docente.setId(nuevoId);
+                docente.setNombre(dto.getNombre());
+                docente.setMaterias(dto.getMaterias() != null ? 
+                    dto.getMaterias() : new ArrayList<>());
+                docente.setPuntaje(0.0);
+                docente.setCantResenas(0);
+                docente.setResenas(new ArrayList<>());
+                
+                // Guardar en Firestore
+                nuevoDoc.set(docente).get();
+                
+                docentesCreados.add(docente);
             }
-            
-            // Usar deserialización manual en lugar de toObject()
-            DocenteEntity docente = deserializarDocente(doc);
-            
-            // Retornar la lista de reseñas (puede estar vacía)
-            List<ResenaEntity> resenas = docente.getResenas() != null ? 
-                    docente.getResenas() : new ArrayList<>();
-            
-            return Optional.of(resenas);
+            return docentesCreados;
             
         } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Error obteniendo reseñas de docente desde Firebase", e);
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Error cargando docentes iniciales en Firestore", e);
         }
     }
     
-    // 10. Método privado para calcular puntaje promedio
+    // ============ MÉTODOS PRIVADOS ============
+    
     private void calcularPuntajePromedio(DocenteEntity docente) {
         if (docente.getResenas() == null || docente.getResenas().isEmpty()) {
             docente.setPuntaje(0.0);
             return;
         }
         
-        double promedio = docente.getResenas().stream()
-                .mapToInt(ResenaEntity::getEstrellas)
-                .average()
-                .orElse(0.0);
+        double suma = 0;
+        for (ResenaEntity resena : docente.getResenas()) {
+            suma += resena.getEstrellas();
+        }
         
+        double promedio = suma / docente.getResenas().size();
         // Redondear a 1 decimal
         docente.setPuntaje(Math.round(promedio * 10.0) / 10.0);
-    }
-    
-    private Map<String, Object> convertirDocenteAMap(DocenteEntity docente) {
-        Map<String, Object> docenteMap = new HashMap<>();
-        
-        // Datos básicos
-        docenteMap.put("id", docente.getId());
-        docenteMap.put("nombre", docente.getNombre());
-        docenteMap.put("puntaje", docente.getPuntaje());
-        docenteMap.put("cantResenas", docente.getCantResenas());
-        docenteMap.put("materias", docente.getMaterias() != null ? docente.getMaterias() : new ArrayList<>());
-        
-        // Convertir reseñas asegurando que tengan ID
-        List<Map<String, Object>> resenasList = new ArrayList<>();
-        if (docente.getResenas() != null && !docente.getResenas().isEmpty()) {
-            for (ResenaEntity resena : docente.getResenas()) {
-                Map<String, Object> resenaMap = new HashMap<>();
-                // Generar ID si no existe
-                if (resena.getId() == null || resena.getId().isEmpty()) {
-                    resena.setId(UUID.randomUUID().toString());
-                }
-                
-                resenaMap.put("id", resena.getId());
-                resenaMap.put("estudiante", resena.getEstudiante());
-                resenaMap.put("comentario", resena.getComentario());
-                resenaMap.put("estrellas", resena.getEstrellas());
-                resenaMap.put("fecha", resena.getFecha() != null ? 
-                        resena.getFecha().format(DATE_FORMATTER) : 
-                        LocalDateTime.now().format(DATE_FORMATTER));
-                resenaMap.put("likes", resena.getLikes() != null ? resena.getLikes() : 0);
-                resenasList.add(resenaMap);
-            }
-        }
-        docenteMap.put("resenas", resenasList);
-        
-        // Timestamp de última actualización
-        docenteMap.put("ultimaActualizacion", new Date());
-        
-        return docenteMap;
-    }
-    
- // Método auxiliar para deserializar DocenteEntity correctamente
-    private DocenteEntity deserializarDocente(DocumentSnapshot doc) {
-        DocenteEntity docente = new DocenteEntity();
-        docente.setId(doc.getId());
-        docente.setNombre(doc.getString("nombre"));
-        docente.setPuntaje(doc.getDouble("puntaje"));
-        docente.setCantResenas(doc.get("cantResenas", Integer.class));
-        docente.setMaterias(doc.get("materias", List.class));
-        
-        // Deserializar reseñas manualmente
-        List<Map<String, Object>> resenasData = doc.get("resenas", List.class);
-        List<ResenaEntity> resenas = new ArrayList<>();
-        
-        if (resenasData != null) {
-            for (Map<String, Object> resenaData : resenasData) {
-                ResenaEntity resena = new ResenaEntity(
-                    (String) resenaData.get("id"),
-                    (String) resenaData.get("estudiante"),
-                    (String) resenaData.get("comentario"),
-                    (Integer) resenaData.get("estrellas"),
-                    resenaData.get("fecha"),
-                    (Integer) resenaData.get("likes")
-                );
-                resenas.add(resena);
-            }
-        }
-        docente.setResenas(resenas);
-        
-        return docente;
     }
 }

@@ -2,7 +2,6 @@ package com.affinityteach.model.entity;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 import com.google.cloud.Timestamp;
@@ -14,47 +13,23 @@ public class ResenaEntity {
 	private String estudiante;
 	private String comentario;
 	private Integer estrellas;
-	private LocalDateTime fecha;
+	private Timestamp  fecha;
 	private Integer likes;
 
     public ResenaEntity() {
         this.id = UUID.randomUUID().toString();
-        this.fecha = LocalDateTime.now();
+        this.fecha = Timestamp.now();
         this.likes = 0;
     }
-    
+        
     // Constructor para Firestore
-    public ResenaEntity(String id, String estudiante, String comentario, 
-                       Integer estrellas, Object fechaObj, Integer likes) {
-        this.id = id != null ? id : UUID.randomUUID().toString();
+    public ResenaEntity(String estudiante, String comentario, Integer estrellas) {
+        this.id = UUID.randomUUID().toString();
         this.estudiante = estudiante;
         this.comentario = comentario;
         this.estrellas = estrellas;
-        this.likes = likes != null ? likes : 0;
-        this.fecha = parseFechaFromFirestore(fechaObj);
-    }
-    
-    @Exclude
-    private LocalDateTime parseFechaFromFirestore(Object fechaObj) {
-        if (fechaObj == null) {
-            return LocalDateTime.now();
-        }
-        
-        if (fechaObj instanceof Timestamp) {
-            // Si es Timestamp de Firestore
-            Timestamp timestamp = (Timestamp) fechaObj;
-            return timestamp.toDate().toInstant()
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDateTime();
-        } else if (fechaObj instanceof String) {
-            // Si es String (como guardas en convertirDocenteAMap)
-            return LocalDateTime.parse((String) fechaObj, 
-                DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"));
-        } else if (fechaObj instanceof LocalDateTime) {
-            return (LocalDateTime) fechaObj;
-        }
-        
-        return LocalDateTime.now();
+        this.fecha = Timestamp.now();
+        this.likes = 0;
     }
 
 	public String getId() {
@@ -89,13 +64,20 @@ public class ResenaEntity {
 		this.estrellas = estrellas;
 	}
 
-	public LocalDateTime getFecha() {
-		return fecha;
-	}
-
-	public void setFecha(LocalDateTime fecha) {
-		this.fecha = fecha;
-	}
+    @Exclude
+    public LocalDateTime getFechaAsLocalDateTime() {
+        if (fecha == null) return null;
+        return fecha.toDate().toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
+    }
+    
+    @Exclude
+    public void setFechaFromLocalDateTime(LocalDateTime localDateTime) {
+        if (localDateTime != null) {
+            this.fecha = Timestamp.of(java.sql.Timestamp.valueOf(localDateTime));
+        }
+    }
 
 	public Integer getLikes() {
 		return likes;

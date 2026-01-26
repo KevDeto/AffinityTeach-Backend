@@ -16,13 +16,12 @@ public class DocenteEntity {
 
 	public DocenteEntity(String id, String nombre, Double puntaje, Integer cantResenas, List<String> materias,
 			List<ResenaEntity> resenas) {
-		super();
 		this.id = id;
 		this.nombre = nombre;
 		this.puntaje = puntaje;
 		this.cantResenas = cantResenas;
-		this.materias = materias;
-		this.resenas = resenas;
+		this.materias = materias != null ? materias : new ArrayList<>();
+		this.resenas = resenas != null ? resenas : new ArrayList<>();
 	}
 
 	public DocenteEntity() {
