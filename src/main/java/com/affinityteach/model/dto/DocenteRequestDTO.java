@@ -3,7 +3,6 @@ package com.affinityteach.model.dto;
 import java.util.List;
 
 public class DocenteRequestDTO {
-//    @NotBlank(message = "El nombre del docente es requerido")
 	private String nombre;
 
 	private List<String> materias;

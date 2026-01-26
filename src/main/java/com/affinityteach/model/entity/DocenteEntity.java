@@ -7,8 +7,8 @@ public class DocenteEntity {
 	private String id;
 
 	private String nombre;
-	private Double puntaje = 0.0;
-	private Integer cantResenas = 0;
+	private Double puntaje;
+	private Integer cantResenas;
 
 	private List<String> materias = new ArrayList<>();
 

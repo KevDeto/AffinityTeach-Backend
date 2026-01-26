@@ -9,7 +9,7 @@ public class ResenaEntity {
 	private String comentario;
 	private Integer estrellas;
 	private LocalDateTime fecha;
-	private Integer likes = 0;
+	private Integer likes;
 
 	public ResenaEntity(String id, String estudiante, String comentario, Integer estrellas, LocalDateTime fecha,
 			Integer likes) {

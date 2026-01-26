@@ -1,15 +1,9 @@
 package com.affinityteach.model.dto;
 
 public class ResenaRequestDTO {
-//    @NotBlank(message = "El nombre del estudiante es requerido")
-	private String estudiante;
-
-//    @NotBlank(message = "El comentario es requerido")
-	private String comentario;
-
-//    @Min(value = 1, message = "Las estrellas deben ser mínimo 1")
-//    @Max(value = 5, message = "Las estrellas deben ser máximo 5")
-	private Integer estrellas;
+    private String estudiante;
+    private String comentario;
+    private Integer estrellas;
 
 	public ResenaRequestDTO(String estudiante, String comentario, Integer estrellas) {
 		super();

@@ -159,6 +159,20 @@ public class DocenteController {
         }
     }
     
+ // 10. Obtener todas las reseñas de un docente por ID
+    @GetMapping("/{id}/resenas")
+    public ResponseEntity<?> getResenasByDocenteId(@PathVariable String id) {
+        try {
+            return docenteService.getResenasByDocenteId(id)
+                    .<ResponseEntity<?>>map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .body(crearErrorResponse("Docente no encontrado con ID: " + id)));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(crearErrorResponse("Error al obtener reseñas: " + e.getMessage()));
+        }
+    }
+    
     // ============ MÉTODOS PRIVADOS DE VALIDACIÓN ============
     
     private void validarDocenteRequest(DocenteRequestDTO request) {

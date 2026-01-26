@@ -323,6 +323,30 @@ public class DocenteService {
         }
     }
     
+ // 11. Obtener todas las reseñas de un docente por ID
+    public Optional<List<ResenaEntity>> getResenasByDocenteId(String id) {
+        try {
+            DocumentSnapshot doc = docentesCollection.document(String.valueOf(id)).get().get();
+            if (!doc.exists()) {
+                return Optional.empty();
+            }
+            
+            DocenteEntity docente = doc.toObject(DocenteEntity.class);
+            if (docente == null) {
+                return Optional.empty();
+            }
+            
+            // Retornar la lista de reseñas (puede estar vacía)
+            List<ResenaEntity> resenas = docente.getResenas() != null ? 
+                    docente.getResenas() : new ArrayList<>();
+            
+            return Optional.of(resenas);
+            
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException("Error obteniendo reseñas de docente desde Firebase", e);
+        }
+    }
+    
     // 10. Método privado para calcular puntaje promedio
     private void calcularPuntajePromedio(DocenteEntity docente) {
         if (docente.getResenas() == null || docente.getResenas().isEmpty()) {
