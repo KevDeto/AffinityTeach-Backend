@@ -185,9 +185,10 @@ public class DocenteController {
         if (request.getEstudiante() == null || request.getEstudiante().trim().isEmpty()) {
             throw new IllegalArgumentException("El nombre del estudiante es requerido");
         }
+        /*
         if (request.getComentario() == null || request.getComentario().trim().isEmpty()) {
             throw new IllegalArgumentException("El comentario es requerido");
-        }
+        }*/
         if (request.getEstrellas() == null || request.getEstrellas() < 1 || request.getEstrellas() > 5) {
             throw new IllegalArgumentException("Las estrellas deben estar entre 1 y 5");
         }
