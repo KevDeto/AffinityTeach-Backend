@@ -4,12 +4,14 @@ public class ResenaRequestDTO {
     private String estudiante;
     private String comentario;
     private Integer estrellas;
+    private String photo;
 
-	public ResenaRequestDTO(String estudiante, String comentario, Integer estrellas) {
+	public ResenaRequestDTO(String estudiante, String comentario, Integer estrellas, String photo) {
 		super();
 		this.estudiante = estudiante;
 		this.comentario = comentario;
 		this.estrellas = estrellas;
+		this.setPhoto(photo);
 	}
 
 	public ResenaRequestDTO() {
@@ -37,6 +39,14 @@ public class ResenaRequestDTO {
 
 	public void setEstrellas(Integer estrellas) {
 		this.estrellas = estrellas;
+	}
+
+	public String getPhoto() {
+		return photo;
+	}
+
+	public void setPhoto(String photo) {
+		this.photo = photo;
 	}
 
 }

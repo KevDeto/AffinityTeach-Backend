@@ -15,6 +15,7 @@ public class ResenaEntity {
 	private Integer estrellas;
 	private Timestamp  fecha;
 	private Integer likes;
+	private String photo;
 
     public ResenaEntity() {
         this.id = UUID.randomUUID().toString();
@@ -23,12 +24,13 @@ public class ResenaEntity {
     }
         
     // Constructor para Firestore
-    public ResenaEntity(String estudiante, String comentario, Integer estrellas) {
+    public ResenaEntity(String estudiante, String comentario, Integer estrellas, String photo) {
         this.id = UUID.randomUUID().toString();
         this.estudiante = estudiante;
         this.comentario = comentario;
         this.estrellas = estrellas;
         this.fecha = Timestamp.now();
+        this.photo = photo;
         this.likes = 0;
     }
 
@@ -85,6 +87,14 @@ public class ResenaEntity {
 
 	public void setLikes(Integer likes) {
 		this.likes = likes;
+	}
+
+	public String getPhoto() {
+		return photo;
+	}
+
+	public void setPhoto(String photo) {
+		this.photo = photo;
 	}
 
 }

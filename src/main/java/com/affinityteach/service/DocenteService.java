@@ -115,7 +115,8 @@ public class DocenteService {
             ResenaEntity nuevaResena = new ResenaEntity(
                 resenaRequest.getEstudiante(),
                 resenaRequest.getComentario(),
-                resenaRequest.getEstrellas()
+                resenaRequest.getEstrellas(),
+                resenaRequest.getPhoto()
             );
             
             // Agregar a la lista
