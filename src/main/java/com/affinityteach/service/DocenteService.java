@@ -116,7 +116,8 @@ public class DocenteService {
                 resenaRequest.getEstudiante(),
                 resenaRequest.getComentario(),
                 resenaRequest.getEstrellas(),
-                resenaRequest.getPhoto()
+                resenaRequest.getPhoto(),
+                resenaRequest.getEmail()
             );
             
             // Agregar a la lista
@@ -233,6 +234,13 @@ public class DocenteService {
         } catch (InterruptedException | ExecutionException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Error creando docente en Firestore", e);
+        }
+    }
+    
+    //6.5 Importar lista de docentes
+    public void importarDocentes(List<DocenteRequestDTO> docenteRequest) {
+        for(DocenteRequestDTO dto : docenteRequest) {
+            crearDocente(dto);
         }
     }
     

@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -53,6 +54,18 @@ public class DocenteController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(crearErrorResponse("Error al crear docente: " + e.getMessage()));
         }
+    }
+    
+    // 3.5 Importar lista de docentes
+    @PostMapping("/importar-docentes")
+    public ResponseEntity<?> importarDocentes(@RequestBody List<DocenteRequestDTO> docentes){
+    	 try {
+    		 docenteService.importarDocentes(docentes);
+    		 return ResponseEntity.ok("Docentes importados correctamente");
+    	 }catch(Exception e){
+    		 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    				 .body(crearErrorResponse("Error al imporarDocentes: "+ e.getMessage()));
+    	 }
     }
     
     // 4. Actualizar docente (cambiado a String)
