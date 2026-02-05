@@ -16,7 +16,7 @@ public class CorsConfig {
                         .allowedOrigins(
                         		"http://localhost:5173", 
                         		"http://localhost:3000", 
-                        		"https://affinity-teach.vercel.app/")
+                        		"https://affinity-teach.vercel.app")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
