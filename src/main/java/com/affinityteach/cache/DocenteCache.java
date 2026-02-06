@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
+import org.springframework.stereotype.Component;
+
 import com.affinityteach.model.entity.DocenteEntity;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.CollectionReference;
@@ -16,6 +18,7 @@ import com.google.cloud.firestore.QuerySnapshot;
 
 import jakarta.annotation.PostConstruct;
 
+@Component
 public class DocenteCache {
 	private List<DocenteEntity> cache = new ArrayList<>();
 	private long lastUpdate = 0;
