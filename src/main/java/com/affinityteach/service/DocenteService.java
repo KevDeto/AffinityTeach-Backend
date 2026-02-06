@@ -1,5 +1,6 @@
 package com.affinityteach.service;
 
+import com.affinityteach.cache.DocenteCache;
 import com.affinityteach.firebase.FirebaseInitializer;
 import com.affinityteach.model.dto.DocenteRequestDTO;
 import com.affinityteach.model.dto.ResenaRequestDTO;
@@ -16,14 +17,16 @@ import java.util.concurrent.ExecutionException;
 @Service
 public class DocenteService {
     
+	private DocenteCache docenteCache;
     private final FirebaseInitializer firebaseInitializer;
     private Firestore firestore;
     private CollectionReference docentesCollection;
     
     private static final String COLECCION_DOCENTES = "docentes";
     
-    public DocenteService(FirebaseInitializer firebaseInitializer) {
+    public DocenteService(FirebaseInitializer firebaseInitializer, DocenteCache docenteCache) {
         this.firebaseInitializer = firebaseInitializer;
+        this.docenteCache = docenteCache;
     }
     
     @PostConstruct
@@ -66,6 +69,12 @@ public class DocenteService {
     
     // 2. Obtener docente por ID
     public Optional<DocenteEntity> getDocenteById(String id) {
+        Optional<DocenteEntity> docente = docenteCache.getDocenteById(id);
+        
+        if (docente.isPresent()) {
+            System.out.println("Docente " + id + " encontrado en CACHE");
+            return docente;
+        }
         try {
             DocumentReference docenteRef = docentesCollection.document(id);
             DocumentSnapshot doc = docenteRef.get().get();
@@ -75,11 +84,11 @@ public class DocenteService {
             }
             
             // Deserialización automática
-            DocenteEntity docente = doc.toObject(DocenteEntity.class);
-            if (docente != null) {
-                docente.setId(doc.getId());
+            DocenteEntity docenteEntity = doc.toObject(DocenteEntity.class);
+            if (docenteEntity != null) {
+            	docenteEntity.setId(doc.getId());
             }
-            return Optional.ofNullable(docente);
+            return Optional.ofNullable(docenteEntity);
             
         } catch (InterruptedException | ExecutionException e) {
             Thread.currentThread().interrupt();
@@ -90,19 +99,24 @@ public class DocenteService {
     // 3. Agregar reseña a un docente
     public Optional<DocenteEntity> agregarResena(String docenteId, ResenaRequestDTO resenaRequest) {
         try {
+            Optional<DocenteEntity> docenteOpt = docenteCache.getDocenteById(docenteId);
             DocumentReference docenteRef = docentesCollection.document(docenteId);
-            DocumentSnapshot doc = docenteRef.get().get();
             
-            if (!doc.exists()) {
-                return Optional.empty();
+            DocenteEntity docente;
+            boolean desdeCache = false;
+            if (docenteOpt.isPresent()) {
+                docente = docenteOpt.get();
+                desdeCache = true;
+            } else {
+                // si no esta en cache
+                DocumentSnapshot doc = docenteRef.get().get();
+                
+                if (!doc.exists()) return Optional.empty();
+                
+                docente = doc.toObject(DocenteEntity.class);
+                if (docente == null) return Optional.empty();
+                docente.setId(doc.getId());
             }
-            
-            // Obtener docente actual
-            DocenteEntity docente = doc.toObject(DocenteEntity.class);
-            if (docente == null) {
-                return Optional.empty();
-            }
-            docente.setId(doc.getId());
             
             // Validar estrellas
             if (resenaRequest.getEstrellas() == null || 
@@ -134,6 +148,16 @@ public class DocenteService {
             updates.put("puntaje", docente.getPuntaje());
             
             docenteRef.update(updates).get();
+            System.out.println("💾 Reseña guardada en Firestore");
+            
+            // 5. Actualizar cache
+            if (desdeCache) {
+                // Si ya estaba en cache, actualizar con datos locales
+                docenteCache.actualizarDocenteIndividualConDatos(docenteId, docente);
+            } else {
+                // Si no estaba en cache, forzar reload desde Firestore
+                docenteCache.actualizarDocenteIndividual(docenteId);
+            }
             
             return Optional.of(docente);
             
@@ -185,7 +209,7 @@ public class DocenteService {
     }
     
     // 5. Obtener todos los docentes
-    public List<DocenteEntity> getAllDocentes() {
+    public List<DocenteEntity> getAllDocentesFromFirestore() {
         try {
             ApiFuture<QuerySnapshot> future = docentesCollection.get();
             QuerySnapshot snapshot = future.get();
@@ -207,6 +231,10 @@ public class DocenteService {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Error obteniendo docentes de Firestore", e);
         }
+    }
+    
+    public List<DocenteEntity> getAllDocentes() {
+        return docenteCache.getDocentes();
     }
     
     // 6. Crear nuevo docente
@@ -361,6 +389,22 @@ public class DocenteService {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Error cargando docentes iniciales en Firestore", e);
         }
+    }
+    
+    // Método para forzar refresh del cache
+    public void refreshCache() {
+        System.out.println("Forzando refresh del cache...");
+        docenteCache.refreshCache();
+    }
+    
+    // Métricas del cache (para debug)
+    public Map<String, Object> getCacheStats() {
+        return Map.of(
+            "size", docenteCache.getCacheSize(),
+            "lastUpdate", new Date(docenteCache.getLastUpdate()),
+            "ttlHours", 24,
+            "status", "ACTIVE"
+        );
     }
     
     // ============ MÉTODOS PRIVADOS ============
