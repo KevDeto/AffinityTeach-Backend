@@ -19,9 +19,6 @@ public class ResenaEntity {
 	private String email;
 
     public ResenaEntity() {
-        this.id = UUID.randomUUID().toString();
-        this.fecha = Timestamp.now();
-        this.likes = 0;
     }
         
     // Constructor para Firestore
@@ -68,7 +65,15 @@ public class ResenaEntity {
 		this.estrellas = estrellas;
 	}
 
-    @Exclude
+    public Timestamp getFecha() {
+		return fecha;
+	}
+
+	public void setFecha(Timestamp fecha) {
+		this.fecha = fecha;
+	}
+
+	@Exclude
     public LocalDateTime getFechaAsLocalDateTime() {
         if (fecha == null) return null;
         return fecha.toDate().toInstant()
