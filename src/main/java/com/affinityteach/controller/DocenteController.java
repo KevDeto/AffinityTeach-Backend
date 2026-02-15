@@ -138,6 +138,11 @@ public class DocenteController {
             String name = jwt.getClaimAsString("name");
             String picture = jwt.getClaimAsString("picture");
             
+            if (email == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(crearErrorResponse("Token no contiene email"));
+            }
+            
             ResenaEntity resena = new ResenaEntity(
                     name,
                     resenaRequest.getComentario(),
@@ -148,7 +153,7 @@ public class DocenteController {
             
             validarResenaRequest(resena);
             
-            Optional<DocenteEntity> resultado = docenteService.agregarResena(id, resena);
+            Optional<DocenteEntity> resultado = docenteService.agregarResena(id, resena, email);
 
             if (resultado.isPresent()) {
                 return ResponseEntity.ok(new ReviewPublicDTO(resena));
