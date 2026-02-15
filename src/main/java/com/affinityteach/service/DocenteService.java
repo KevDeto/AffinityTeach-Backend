@@ -3,7 +3,7 @@ package com.affinityteach.service;
 import com.affinityteach.cache.DocenteCache;
 import com.affinityteach.firebase.FirebaseInitializer;
 import com.affinityteach.model.dto.DocenteRequestDTO;
-import com.affinityteach.model.dto.ResenaRequestDTO;
+//import com.affinityteach.model.dto.ResenaRequestDTO;
 import com.affinityteach.model.entity.DocenteEntity;
 import com.affinityteach.model.entity.ResenaEntity;
 import com.google.api.core.ApiFuture;
@@ -97,7 +97,7 @@ public class DocenteService {
     }
     
     // 3. Agregar reseña a un docente
-    public Optional<DocenteEntity> agregarResena(String docenteId, ResenaRequestDTO resenaRequest) {
+    public Optional<DocenteEntity> agregarResena(String docenteId, ResenaEntity resenaEntity) {
         try {
             Optional<DocenteEntity> docenteOpt = docenteCache.getDocenteById(docenteId);
             DocumentReference docenteRef = docentesCollection.document(docenteId);
@@ -119,19 +119,19 @@ public class DocenteService {
             }
             
             // Validar estrellas
-            if (resenaRequest.getEstrellas() == null || 
-                resenaRequest.getEstrellas() < 1 || 
-                resenaRequest.getEstrellas() > 5) {
+            if (resenaEntity.getEstrellas() == null || 
+            		resenaEntity.getEstrellas() < 1 || 
+            		resenaEntity.getEstrellas() > 5) {
                 throw new IllegalArgumentException("Las estrellas deben estar entre 1 y 5");
             }
             
             // Crear nueva reseña
             ResenaEntity nuevaResena = new ResenaEntity(
-                resenaRequest.getEstudiante(),
-                resenaRequest.getComentario(),
-                resenaRequest.getEstrellas(),
-                resenaRequest.getPhoto(),
-                resenaRequest.getEmail()
+            		resenaEntity.getEstudiante(),
+            		resenaEntity.getComentario(),
+            		resenaEntity.getEstrellas(),
+            		resenaEntity.getPhoto(),
+            		resenaEntity.getEmail()
             );
             
             // Agregar a la lista

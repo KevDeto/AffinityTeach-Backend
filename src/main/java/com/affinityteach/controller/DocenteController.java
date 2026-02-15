@@ -1,17 +1,24 @@
 package com.affinityteach.controller;
 
+import com.affinityteach.model.dto.DocentePublicDTO;
 import com.affinityteach.model.dto.DocenteRequestDTO;
 import com.affinityteach.model.dto.ResenaRequestDTO;
+import com.affinityteach.model.dto.ReviewPublicDTO;
 import com.affinityteach.model.entity.DocenteEntity;
+import com.affinityteach.model.entity.ResenaEntity;
 import com.affinityteach.service.DocenteService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/docentes")
@@ -26,18 +33,32 @@ public class DocenteController {
     // ============ CRUD BÁSICO ============
     
     // 1. Obtener todos los docentes
+//    @GetMapping
+//    public ResponseEntity<List<DocenteEntity>> getAllDocentes() {
+//        return ResponseEntity.ok(docenteService.getAllDocentes());
+//    }
+    
     @GetMapping
-    public ResponseEntity<List<DocenteEntity>> getAllDocentes() {
-        return ResponseEntity.ok(docenteService.getAllDocentes());
+    public ResponseEntity<List<DocentePublicDTO>> getAllDocentes() {
+        List<DocenteEntity> docentes = docenteService.getAllDocentes();
+        List<DocentePublicDTO> docentesDTO = docentes.stream()
+            .map(DocentePublicDTO::new)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(docentesDTO);
     }
     
     // 2. Obtener docente por ID (cambiado a String)
     @GetMapping("/{id}")
     public ResponseEntity<?> getDocenteById(@PathVariable String id) {
-        return docenteService.getDocenteById(id)
-                .<ResponseEntity<?>>map(ResponseEntity::ok)
-                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(crearErrorResponse("Docente no encontrado con ID: " + id)));
+        Optional<DocenteEntity> optional = docenteService.getDocenteById(id);
+        
+        if (optional.isPresent()) {
+            DocentePublicDTO dto = new DocentePublicDTO(optional.get());
+            return ResponseEntity.ok(dto);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(crearErrorResponse("Docente no encontrado con ID: " + id));
+        }
     }
     
     // 3. Crear nuevo docente
@@ -108,14 +129,33 @@ public class DocenteController {
     @PostMapping("/{id}/resenas")
     public ResponseEntity<?> agregarResena(
             @PathVariable String id,
-            @RequestBody ResenaRequestDTO resenaRequest) {
+            @RequestBody ResenaRequestDTO resenaRequest,
+            @AuthenticationPrincipal Jwt jwt) {
         
         try {
-            validarResenaRequest(resenaRequest);
-            return docenteService.agregarResena(id, resenaRequest)
-                    .<ResponseEntity<?>>map(ResponseEntity::ok)
-                    .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                            .body(crearErrorResponse("Docente no encontrado con ID: " + id)));
+            
+            String email = jwt.getClaimAsString("email");
+            String name = jwt.getClaimAsString("name");
+            String picture = jwt.getClaimAsString("picture");
+            
+            ResenaEntity resena = new ResenaEntity(
+                    name,
+                    resenaRequest.getComentario(),
+                    resenaRequest.getEstrellas(),
+                    picture,
+                    email
+                );
+            
+            validarResenaRequest(resena);
+            
+            Optional<DocenteEntity> resultado = docenteService.agregarResena(id, resena);
+
+            if (resultado.isPresent()) {
+                return ResponseEntity.ok(new ReviewPublicDTO(resena));
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(crearErrorResponse("Docente no encontrado con ID: " + id));
+            }
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(crearErrorResponse(e.getMessage()));
         } catch (RuntimeException e) {
@@ -193,15 +233,15 @@ public class DocenteController {
         }
     }
     
-    private void validarResenaRequest(ResenaRequestDTO request) {
-        if (request.getEstudiante() == null || request.getEstudiante().trim().isEmpty()) {
+    private void validarResenaRequest(ResenaEntity resena) {
+        if (resena.getEstudiante() == null || resena.getEstudiante().trim().isEmpty()) {
             throw new IllegalArgumentException("El nombre del estudiante es requerido");
         }
         /*
         if (request.getComentario() == null || request.getComentario().trim().isEmpty()) {
             throw new IllegalArgumentException("El comentario es requerido");
         }*/
-        if (request.getEstrellas() == null || request.getEstrellas() < 1 || request.getEstrellas() > 5) {
+        if (resena.getEstrellas() == null || resena.getEstrellas() < 1 || resena.getEstrellas() > 5) {
             throw new IllegalArgumentException("Las estrellas deben estar entre 1 y 5");
         }
     }
