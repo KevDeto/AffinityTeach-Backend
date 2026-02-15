@@ -97,7 +97,8 @@ public class DocenteService {
     }
     
     // 3. Agregar reseña a un docente
-    public Optional<DocenteEntity> agregarResena(String docenteId, ResenaEntity resenaEntity) {
+    public Optional<DocenteEntity> agregarResena(String docenteId, ResenaEntity resenaEntity,
+    		String userEmail) {
         try {
             Optional<DocenteEntity> docenteOpt = docenteCache.getDocenteById(docenteId);
             DocumentReference docenteRef = docentesCollection.document(docenteId);
@@ -117,7 +118,12 @@ public class DocenteService {
                 if (docente == null) return Optional.empty();
                 docente.setId(doc.getId());
             }
-            
+            boolean yaResenio = docente.getResenas().stream()
+                    .anyMatch(r -> r.getEmail() != null && r.getEmail().equals(userEmail));
+                
+                if (yaResenio) {
+                    throw new IllegalArgumentException("Ya has dejado una reseña para este docente");
+                }
             // Validar estrellas
             if (resenaEntity.getEstrellas() == null || 
             		resenaEntity.getEstrellas() < 1 || 
