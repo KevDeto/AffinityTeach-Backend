@@ -60,7 +60,7 @@ public class SecurityConfig {
     public JwtDecoder jwtDecoder() {
         // Validar tokens de Google (firebase tiene uno propio)
         return NimbusJwtDecoder
-                .withJwkSetUri("https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com")
+                .withJwkSetUri("https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com")
                 .build();    }
     
     @Bean
