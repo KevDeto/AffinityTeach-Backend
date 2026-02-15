@@ -6,4 +6,5 @@ services:
     dockerContext: .
     plan: free
     healthCheckPath: /actuator/health
+    healthCheckMethod: GET
     autoDeploy: true
