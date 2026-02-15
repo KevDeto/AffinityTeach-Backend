@@ -7,4 +7,7 @@ services:
     plan: free
     healthCheckPath: /actuator/health
     healthCheckMethod: GET
+    healthCheckInitialDelay: 120  # 2 minutos de espera antes del primer check
+    healthCheckTimeout: 10        # Tiempo para responder
+    healthCheckInterval: 15 
     autoDeploy: true
