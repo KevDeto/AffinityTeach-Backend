@@ -29,10 +29,11 @@ public class SecurityConfig {
                 )
             .authorizeHttpRequests(auth -> auth
             	.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+            	
                 .requestMatchers(HttpMethod.GET, "/api/docentes").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/docentes/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/usuarios/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/docentes/{id}").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/docentes/{id}/resenas").permitAll()
+                
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers(HttpMethod.GET, "/ping").permitAll()
                 
