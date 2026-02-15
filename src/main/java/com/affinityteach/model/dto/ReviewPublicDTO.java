@@ -1,15 +1,14 @@
 package com.affinityteach.model.dto;
 
-import java.time.LocalDateTime;
-
 import com.affinityteach.model.entity.ResenaEntity;
+import com.google.cloud.Timestamp;
 
 public class ReviewPublicDTO {
     private String id;
     private String estudiante;
     private String comentario;
     private Integer estrellas;
-    private LocalDateTime fecha;
+    private Timestamp fecha;
     private Integer likes;
     private String photo;
 
@@ -18,7 +17,7 @@ public class ReviewPublicDTO {
         this.estudiante = resena.getEstudiante();
         this.comentario = resena.getComentario();
         this.estrellas = resena.getEstrellas();
-        this.fecha = resena.getFechaAsLocalDateTime();
+        this.fecha = resena.getFecha();
         this.likes = resena.getLikes();
         this.photo = resena.getPhoto();
     }
@@ -55,11 +54,11 @@ public class ReviewPublicDTO {
 		this.estrellas = estrellas;
 	}
 
-	public LocalDateTime getFecha() {
+	public Timestamp getFecha() {
 		return fecha;
 	}
 
-	public void setFecha(LocalDateTime fecha) {
+	public void setFecha(Timestamp fecha) {
 		this.fecha = fecha;
 	}
 
