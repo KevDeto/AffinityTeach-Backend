@@ -33,6 +33,15 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/docentes").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/docentes/{id}").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/docentes/{id}/resenas").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/docentes/{id}/resenas").hasRole("USER")
+                
+                // PARA QUE NADIE PUEDA MODIFICAR NADA (luego implementar roles)
+                .requestMatchers(HttpMethod.POST, "/api/docentes").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/docentes/importar-docentes").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/docentes/cargar-iniciales").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/docentes/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/docentes/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/docentes/{id}/resenas/*/like").hasRole("ADMIN")
                 
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers(HttpMethod.GET, "/ping").permitAll()
