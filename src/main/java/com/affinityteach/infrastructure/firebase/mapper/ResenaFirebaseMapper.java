@@ -47,15 +47,21 @@ public class ResenaFirebaseMapper {
                     timestamp.getNanos()
             );
         }
+        
+        Long estrellasLong = document.getLong("estrellas");
+        int estrellas = estrellasLong != null ? estrellasLong.intValue() : 0;
+
+        Long likesLong = document.getLong("likes");
+        int likes = likesLong != null ? likesLong.intValue() : 0;
 
         Resena resena = new Resena(
                 document.getId(),
                 document.getString("docenteUid"),
                 document.getString("estudianteNombre"),
                 document.getString("comentario"),
-                document.getLong("estrellas").intValue(),
+                estrellas,
                 instant,
-                document.getLong("likes").intValue(),
+                likes,
                 document.getString("fotoUrl"),
                 document.getString("email")
         );

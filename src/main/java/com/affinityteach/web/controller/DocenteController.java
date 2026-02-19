@@ -2,7 +2,6 @@ package com.affinityteach.web.controller;
 
 import java.util.List;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,12 +20,12 @@ public class DocenteController {
     }
 
     @GetMapping
-    public ResponseEntity<List<DocenteResponseDTO>> obtenerTodos() {
-        return ResponseEntity.ok(docenteService.obtenerTodos());
+    public List<DocenteResponseDTO> obtenerTodos() {
+        return docenteService.obtenerTodos();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<DocenteResponseDTO> obtenerPorId(@PathVariable String id) {
-        return ResponseEntity.ok(docenteService.obtenerPorId(id));
+    public DocenteResponseDTO obtenerPorId(@PathVariable String id) {
+        return docenteService.obtenerPorId(id);
     }
 }

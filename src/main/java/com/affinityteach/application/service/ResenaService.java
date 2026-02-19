@@ -10,6 +10,8 @@ import com.affinityteach.application.dto.ResenaRequestDTO;
 import com.affinityteach.application.dto.ResenaResponseDTO;
 import com.affinityteach.application.dto.UsuarioAutenticadoDTO;
 import com.affinityteach.application.mapper.ResenaMapper;
+import com.affinityteach.domain.exception.BadRequestException;
+import com.affinityteach.domain.exception.NotFoundException;
 import com.affinityteach.domain.model.Docente;
 import com.affinityteach.domain.model.Resena;
 import com.affinityteach.domain.port.DocenteRepositoryPort;
@@ -48,7 +50,7 @@ public class ResenaService {
 		
         resenaRepository.findByDocenteIdAndEmail(docenteUid, usuarioAutenticado.email())
         .ifPresent(r -> {
-            throw new RuntimeException("Ya has reseñado este docente");
+            throw new BadRequestException("Ya has reseñado este docente");
         });
         
         Resena nueva = new Resena(
@@ -81,11 +83,11 @@ public class ResenaService {
 
         Resena resena = resenaRepository
                 .findByDocenteIdAndId(docenteId, resenaId)
-                .orElseThrow(() -> new RuntimeException("Reseña no encontrada"));
+                .orElseThrow(() -> new NotFoundException("Reseña no encontrada"));
 
         resena.incrementarLikes();
 
-        Resena actualizada = resenaRepository.save(resena);
+        Resena actualizada = resenaRepository.update(resena);
 
         return resenaMapper.toResponse(actualizada);
     }
@@ -99,7 +101,7 @@ public class ResenaService {
     		Integer nuevasEstrellas) {
     	
         Docente docente = docenteCache.getById(docenteUid)
-                .orElseThrow(() -> new RuntimeException("Docente no encontrado"));
+                .orElseThrow(() -> new NotFoundException("Docente no encontrado"));
 
         double puntajeActual = docente.getPuntaje();
         int cantidadActual = docente.getCantidadResenas();
@@ -120,7 +122,7 @@ public class ResenaService {
     		String docenteUid,
     		Integer estrellasEliminadas) {
         Docente docente = docenteCache.getById(docenteUid)
-                .orElseThrow(() -> new RuntimeException("Docente no encontrado"));
+                .orElseThrow(() -> new NotFoundException("Docente no encontrado"));
 
         int cantidadActual = docente.getCantidadResenas();
 

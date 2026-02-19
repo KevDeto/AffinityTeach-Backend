@@ -29,24 +29,6 @@ public class FirebaseResenaRepository implements ResenaRepositoryPort{
 		this.mapper = mapper;
 	}
 
-	@Override
-    public Resena save(Resena resena) {
-
-        CollectionReference collection = firestore
-                .collection("docentes")
-                .document(resena.getDocenteUid())
-                .collection("resenas");
-
-        Map<String, Object> data = mapper.toFirestore(resena);
-
-        DocumentReference docRef = collection.document();
-        docRef.set(data);
-
-        resena.setUid(docRef.getId());
-
-        return resena;
-    }
-
     @Override
     public List<Resena> findByDocenteId(String docenteUid) {
 
@@ -93,15 +75,6 @@ public class FirebaseResenaRepository implements ResenaRepositoryPort{
 	}
 
 	@Override
-	public void deleteById(String docenteUid, String uid) {
-	    firestore.collection("docentes")
-        .document(docenteUid)
-        .collection("resenas")
-        .document(uid)
-        .delete();
-	}
-
-	@Override
 	public Optional<Resena> findByDocenteIdAndId(String docenteUid, String resenaId) {
 
 	    DocumentReference ref = firestore
@@ -126,5 +99,48 @@ public class FirebaseResenaRepository implements ResenaRepositoryPort{
 	    } catch (ExecutionException e) {
 	        throw new RuntimeException("Error fetching resena by id", e);
 	    }
+	}
+	
+	@Override
+    public Resena save(Resena resena) {
+
+        CollectionReference collection = firestore
+                .collection("docentes")
+                .document(resena.getDocenteUid())
+                .collection("resenas");
+
+        Map<String, Object> data = mapper.toFirestore(resena);
+
+        DocumentReference docRef = collection.document();
+        docRef.set(data);
+
+        resena.setUid(docRef.getId());
+
+        return resena;
+    }
+	
+	@Override
+	public Resena update(Resena resena) {
+
+	    DocumentReference docRef = firestore
+	            .collection("docentes")
+	            .document(resena.getDocenteUid())
+	            .collection("resenas")
+	            .document(resena.getUid());
+
+	    Map<String, Object> data = mapper.toFirestore(resena);
+
+	    docRef.set(data);
+
+	    return resena;
+	}
+	
+	@Override
+	public void deleteById(String docenteUid, String uid) {
+	    firestore.collection("docentes")
+	    .document(docenteUid)
+        .collection("resenas")
+        .document(uid)
+        .delete();
 	}
 }

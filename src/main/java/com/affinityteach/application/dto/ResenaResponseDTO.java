@@ -1,13 +1,13 @@
 package com.affinityteach.application.dto;
 
-import com.google.cloud.Timestamp;
+import java.time.Instant;
 
 public record ResenaResponseDTO(
 	    String uid,
 	    String estudianteNombre,
 	    String comentario,
 	    Integer estrellas,
-	    Timestamp fecha,
-	    Integer like,
+	    Instant fecha,
+	    Integer likes,
 	    String fotoUrl
 ) {}

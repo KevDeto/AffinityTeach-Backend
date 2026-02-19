@@ -8,6 +8,7 @@ import com.affinityteach.application.cache.DocenteCache;
 import com.affinityteach.application.dto.DocenteRequestDTO;
 import com.affinityteach.application.dto.DocenteResponseDTO;
 import com.affinityteach.application.mapper.DocenteMapper;
+import com.affinityteach.domain.exception.NotFoundException;
 import com.affinityteach.domain.model.Docente;
 import com.affinityteach.domain.port.DocenteRepositoryPort;
 
@@ -34,7 +35,7 @@ public class DocenteService {
 
 	public DocenteResponseDTO obtenerPorId(String id) {
         Docente docente = docenteCache.getById(id)
-                .orElseThrow(() -> new RuntimeException("Docente no encontrado"));
+                .orElseThrow(() -> new NotFoundException("Docente no encontrado"));
 
         return docenteMapper.toResponse(docente);
 	}
@@ -56,7 +57,7 @@ public class DocenteService {
 
 	public DocenteResponseDTO actualizar(String id, DocenteRequestDTO dto) {
         Docente existente = docenteCache.getById(id)
-                .orElseThrow(() -> new RuntimeException("Docente no encontrado"));
+                .orElseThrow(() -> new NotFoundException("Docente no encontrado"));
 
         // No se modifica puntaje ni cantidadResenas
         Docente actualizado = new Docente(

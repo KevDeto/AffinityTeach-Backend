@@ -9,5 +9,4 @@ public class AffinityTeachBackendApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(AffinityTeachBackendApplication.class, args);
 	}
-
 }

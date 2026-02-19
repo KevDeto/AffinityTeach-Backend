@@ -13,6 +13,8 @@ public interface ResenaRepositoryPort {
     Optional<Resena> findByDocenteIdAndId(String docenteUid, String resenaId);
 
     Resena save(Resena resena);
+    
+    Resena update(Resena resena);
 
     void deleteById(String docenteUid, String uid);
 }

@@ -1,5 +1,7 @@
 package com.affinityteach.application.mapper;
 
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
 import com.affinityteach.application.dto.DocenteRequestDTO;
@@ -15,7 +17,7 @@ public class DocenteMapper {
                 dto.nombre(),
                 0.0,                     // puntaje inicial
                 0,                       // cantidadResenas inicial
-                dto.materias()
+                dto.materias() != null ? dto.materias() : List.of()
         );
     }
 

@@ -5,6 +5,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.affinityteach.domain.model.Docente;
@@ -14,6 +16,8 @@ import jakarta.annotation.PostConstruct;
 
 @Component
 public class DocenteCache {
+	private static final Logger log = LoggerFactory.getLogger(DocenteCache.class);
+
     private final DocenteRepositoryPort docenteRepository;
 
     private volatile List<Docente> cache = new ArrayList<>();
@@ -51,7 +55,7 @@ public class DocenteCache {
     }
 
     private synchronized void refresh() {
-        System.out.println("Refrescando cache de docentes...");
+        log.info("Refrescando cache de docentes...");
 
         List<Docente> nuevos = docenteRepository.findAll();
 
@@ -60,7 +64,7 @@ public class DocenteCache {
         cache = nuevos;
         lastUpdate = System.currentTimeMillis();
 
-        System.out.println("Cache actualizada con " + cache.size() + " docentes.");
+        log.info("Cache actualizada con {} docentes.",cache.size());
     }
 
     public synchronized void updateSingle(Docente docenteActualizado) {

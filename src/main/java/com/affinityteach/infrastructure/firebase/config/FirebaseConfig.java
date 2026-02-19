@@ -1,5 +1,6 @@
 package com.affinityteach.infrastructure.firebase.config;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -18,19 +19,30 @@ import com.google.firebase.cloud.FirestoreClient;
 @Configuration
 public class FirebaseConfig {
     @Bean
-    public Firestore firestore() throws IOException {
-
-        InputStream serviceAccount = getServiceAccount();
-
-        FirebaseOptions options = FirebaseOptions.builder()
-                .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                .build();
-
+    Firestore firestore() throws IOException {
+    	
         if (FirebaseApp.getApps().isEmpty()) {
+
+            FirebaseOptions options;
+            
+            String firebaseConfig = System.getenv("FIREBASE_CONFIG");
+            
+            if (firebaseConfig != null) {
+                options = FirebaseOptions.builder()
+                        .setCredentials(GoogleCredentials.fromStream(
+                                new ByteArrayInputStream(firebaseConfig.getBytes())
+                        ))
+                        .build();
+            } else {
+                try (InputStream serviceAccount = getServiceAccount()) {
+                    options = FirebaseOptions.builder()
+                            .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                            .build();
+                }
+            }
+            
             FirebaseApp.initializeApp(options);
         }
-
-        serviceAccount.close();
 
         return FirestoreClient.getFirestore();
     }

@@ -42,6 +42,6 @@ public class Resena {
     }
     
     public void incrementarLikes() {
-        this.likes = this.likes + 1;
+        this.likes = (this.likes == null ? 0 : this.likes) + 1;
     }
 }
