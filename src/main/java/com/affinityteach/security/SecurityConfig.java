@@ -23,7 +23,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 	
-	private static final String PROJECT_ID = "affinityteach";
+	private static final String PROJECT_ID = "affinityteach-staging";
 	
 	@Bean
 	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
