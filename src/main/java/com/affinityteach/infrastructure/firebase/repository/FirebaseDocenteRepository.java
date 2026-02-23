@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Repository;
 
@@ -41,7 +42,7 @@ public class FirebaseDocenteRepository implements DocenteRepositoryPort {
 			return documents
 					.stream()
 					.map(mapper::toDomain)
-					.toList();
+					.collect(Collectors.toList()); //devuelve lista mutable
 
 		} catch (InterruptedException | ExecutionException e) {
 			throw new RuntimeException("Error fetching docentes", e);

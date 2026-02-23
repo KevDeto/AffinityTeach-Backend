@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Repository;
 
@@ -43,7 +44,7 @@ public class FirebaseResenaRepository implements ResenaRepositoryPort{
 
             return documents.stream()
                     .map(mapper::toDomain)
-                    .toList();
+                    .collect(Collectors.toList()); //devuelve lista mutable
 
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException("Error fetching resenas", e);
