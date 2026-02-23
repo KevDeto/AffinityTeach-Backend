@@ -37,7 +37,7 @@ public class SecurityConfig {
 				
                 // PUBLICOS
                 .requestMatchers(HttpMethod.GET, "/api/docentes/**").permitAll()
-                
+                .requestMatchers("/actuator/health").permitAll()
                 // AUTENTICADOS
                 .requestMatchers(HttpMethod.POST,
                         "/api/docentes/*/resenas").authenticated()
