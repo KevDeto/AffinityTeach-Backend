@@ -70,8 +70,8 @@ EXPOSE 8080
 
 # Comando que se ejecutará al iniciar el contenedor
 # ["java", "-jar", "/app/affinityteach-backend.jar"] = ejecuta el JAR con Java
-# "3️⃣ -XX:+UseContainerSupport" = Le dice a la JVM que respete memoria del contenedor.
-ENTRYPOINT ["java", "3️⃣ -XX:+UseContainerSupport", "-jar", "/app/affinityteach-backend.jar"]
+# "-XX:+UseContainerSupport" = Le dice a la JVM que respete memoria del contenedor.
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-jar", "/app/affinityteach-backend.jar"]
 
 
 # Comentado excesivamente para el aprendisaje.
