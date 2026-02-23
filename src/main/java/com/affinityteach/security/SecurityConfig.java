@@ -46,8 +46,8 @@ public class SecurityConfig {
                         "/api/docentes/*/resenas/*/like").authenticated()
                 
                 // ADMIN
-                .requestMatchers("/api/docentes/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/docentes/admin/**").authenticated() //hasRole("ADMIN")
+                .requestMatchers("/api/admin/**").authenticated() //hasRole("ADMIN")
                 
 				.anyRequest().authenticated())
 		.oauth2ResourceServer(oauth -> oauth

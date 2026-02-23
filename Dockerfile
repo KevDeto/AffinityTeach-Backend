@@ -60,7 +60,7 @@ RUN groupadd -r spring && useradd -r -g spring spring
 COPY --from=build /app/target/affinityteach-backend-*.jar affinityteach-backend.jar
 
 # Cambiar permisos
-RUN chown spring:spring app.jar
+RUN chown spring:spring affinityteach-backend.jar
 
 USER spring
 
