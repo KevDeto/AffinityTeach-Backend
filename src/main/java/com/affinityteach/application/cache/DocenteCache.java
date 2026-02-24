@@ -31,7 +31,7 @@ public class DocenteCache {
 
     @PostConstruct
     public void init() {
-        refresh();
+    	log.info("DocenteCache inicializada (lazy mode).");
     }
 
     public List<Docente> getAll() {
@@ -55,16 +55,26 @@ public class DocenteCache {
     }
 
     private synchronized void refresh() {
-        log.info("Refrescando cache de docentes...");
+        try {
+            log.info("Refrescando cache de docentes...");
 
-        List<Docente> nuevos = docenteRepository.findAll();
+            List<Docente> nuevos = docenteRepository.findAll();
 
-        nuevos.sort(Comparator.comparing(Docente::getNombre));
+            nuevos.sort(
+                Comparator.comparing(
+                    Docente::getNombre,
+                    Comparator.nullsLast(String::compareToIgnoreCase)
+                )
+            );
 
-        cache = nuevos;
-        lastUpdate = System.currentTimeMillis();
+            cache = nuevos;
+            lastUpdate = System.currentTimeMillis();
 
-        log.info("Cache actualizada con {} docentes.",cache.size());
+            log.info("Cache actualizada con {} docentes.", cache.size());
+
+        } catch (Exception e) {
+            log.error("Error refrescando cache, se mantiene cache anterior", e);
+        }
     }
 
     public synchronized void updateSingle(Docente docenteActualizado) {
