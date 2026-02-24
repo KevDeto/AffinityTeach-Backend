@@ -7,8 +7,11 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
+import com.affinityteach.application.cache.DocenteCache;
 import com.affinityteach.domain.model.Docente;
 import com.affinityteach.domain.port.DocenteRepositoryPort;
 import com.affinityteach.infrastructure.firebase.mapper.DocenteFirebaseMapper;
@@ -22,7 +25,8 @@ import com.google.cloud.firestore.QueryDocumentSnapshot;
 public class FirebaseDocenteRepository implements DocenteRepositoryPort {
 	private final Firestore firestore;
 	private final DocenteFirebaseMapper mapper;
-	
+	private static final Logger log = LoggerFactory.getLogger(DocenteCache.class);
+
 	public FirebaseDocenteRepository(
 			Firestore firestore,
 			DocenteFirebaseMapper mapper) {
@@ -38,6 +42,7 @@ public class FirebaseDocenteRepository implements DocenteRepositoryPort {
 					.get()
 					.get()
 					.getDocuments();
+			log.info("Docentes encontrados en Firestore: {}", documents.size());
 
 			return documents
 					.stream()
