@@ -21,10 +21,10 @@ public class DocenteFirebaseMapper {
         // Firebase devuelve un List<?> y java no puede garantisar que es List<String>
         // Este manejo seguro de materias evita el warning en el constructor
         List<String> materias = new ArrayList<>();
-        List<?> rawList = doc.get("materias", List.class);
+        Object materiasObj = doc.get("materias");
 
-        if (rawList != null) {
-            for (Object item : rawList) {
+        if (materiasObj instanceof List<?>) {
+            for (Object item : (List<?>) materiasObj) {
                 materias.add(String.valueOf(item));
             }
         }

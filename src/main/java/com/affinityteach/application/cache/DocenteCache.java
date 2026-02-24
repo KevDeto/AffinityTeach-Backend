@@ -94,7 +94,12 @@ public class DocenteCache {
             nuevaLista.add(docenteActualizado);
         }
 
-        nuevaLista.sort(Comparator.comparing(Docente::getNombre));
+        nuevaLista.sort(
+        	    Comparator.comparing(
+        	        Docente::getNombre,
+        	        Comparator.nullsLast(String::compareToIgnoreCase)
+        	    )
+        	);
 
         cache = nuevaLista;
     }
