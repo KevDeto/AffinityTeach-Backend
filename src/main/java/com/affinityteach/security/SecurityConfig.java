@@ -23,7 +23,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 @EnableWebSecurity
 public class SecurityConfig {
 	
-	private static final String PROJECT_ID = "affinityteach-staging";
+	private static final String PROJECT_ID = "affinityteach";
     private final CorsConfigurationSource corsConfigurationSource;
 
     SecurityConfig(CorsConfigurationSource corsConfigurationSource) {
