@@ -27,8 +27,18 @@ public class CorsConfig {
         ));
         
         configuration.setAllowCredentials(true);
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setExposedHeaders(List.of("Authorization"));
+        configuration.setAllowedHeaders(List.of(
+                "Authorization",      // Para token JWT
+                "Content-Type",       // Para JSON
+                "Accept",             // Para negociación
+                "Origin",             // Origen de la petición
+                "X-Requested-With"    // Para AJAX
+        ));
+        configuration.setExposedHeaders(List.of(
+                "Authorization",
+                "Content-Type"
+        ));
+        configuration.setAllowCredentials(true);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         
