@@ -13,12 +13,14 @@ WORKDIR /app
 # Copia el archivo pom.xml desde tu máquina local al contenedor
 # El primer punto (.) es el directorio actual en tu máquina (contexto de Docker)
 # El segundo punto (./) es /app dentro del contenedor
-COPY pom.xml ./
+#COPY pom.xml ./
+COPY pom.xml .
 
 # Descarga todas las dependencias de Maven
 # - Esto se hace ANTES de copiar el código fuente para aprovechar la cache de Docker
 # - Si el pom.xml no cambia, Docker reutiliza esta capa cacheada
-RUN mvn dependency:go-offline
+#RUN mvn dependency:go-offline
+RUN mvn -B dependency:go-offline
 
 # Copia el código fuente (carpeta src/) al contenedor
 # Esto se hace después de las dependencias porque el código cambia más frecuentemente
@@ -28,15 +30,16 @@ COPY src ./src
 # - clean: elimina compilaciones anteriores
 # - package: crea el JAR
 # - DskipTests: omite las pruebas para acelerar la construcción (en producción, ¡ejecuta tests!)
-RUN mvn clean package -DskipTests
-
+#RUN mvn clean package -DskipTests
+RUN mvn -B package -DskipTests
 
 # 2. FASE DE EJECUCIÓN - Imagen final para producción
 # ====================================================
 
 # Nueva imagen base, más pequeña (solo JRE, sin Maven ni herramientas de desarrollo)
 # eclipse-temurin:21-jre = Java 21 Runtime Environment (más ligero que JDK)
-FROM eclipse-temurin:21-jre
+#FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:21-jre-jammy
 
 # Directorio de trabajo para la aplicación ejecutándose
 WORKDIR /app
@@ -48,7 +51,7 @@ RUN groupadd -r spring && useradd -r -g spring spring
 
 # Cambia al usuario no-root (principio de privilegio mínimo)
 # La aplicación se ejecutará como usuario 'spring', no como root
-USER spring:spring
+#USER spring:spring
 
 # Copia SOLO el JAR desde la fase de construcción
 # --from=build: toma el archivo de la etapa llamada 'build'
@@ -56,13 +59,19 @@ USER spring:spring
 # affinityteach-backend.jar: nombre final en la imagen de ejecución
 COPY --from=build /app/target/affinityteach-backend-*.jar affinityteach-backend.jar
 
+# Cambiar permisos
+RUN chown spring:spring affinityteach-backend.jar
+
+USER spring
+
 # Informa a Docker que el contenedor escuchará en el puerto 8080
 # Esto es documentación, NO abre el puerto (eso se hace con docker run -p)
 EXPOSE 8080
 
 # Comando que se ejecutará al iniciar el contenedor
 # ["java", "-jar", "/app/affinityteach-backend.jar"] = ejecuta el JAR con Java
-ENTRYPOINT ["java", "-jar", "/app/affinityteach-backend.jar"]
+# "-XX:+UseContainerSupport" = Le dice a la JVM que respete memoria del contenedor.
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-jar", "/app/affinityteach-backend.jar"]
 
 
 # Comentado excesivamente para el aprendisaje.
